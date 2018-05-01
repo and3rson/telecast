@@ -1,0 +1,20 @@
+env:
+  global:
+    - DOCKER_COMPOSE_VERSION=1.14.0
+
+sudo: required
+
+services:
+  - docker
+
+language: python
+
+matrix:
+  include:
+    - python: 3.6
+      env: DOCKERFILE=Dockerfile
+
+install:
+  - make docker-build
+script:
+  - make docker-test
