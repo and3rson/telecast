@@ -2,12 +2,25 @@ import inspect
 
 import coreapi
 import coreschema
-from rest_framework.exceptions import APIException
+from django.conf import settings
+from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.decorators import api_view, schema
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 IGNORED_FIELDS = ['request']
+
+
+def get_is_port_allowed(port):
+    """
+    Return TELECAST_PORTS.
+    """
+    if not hasattr(settings, 'TELECAST_PORTS'):
+        return True
+    ports = settings.TELECAST_PORTS
+    if not isinstance(ports, (list, tuple)):
+        ports = [ports]
+    return str(port) in map(str, ports)
 
 
 def method(**decorator_kwargs):
@@ -41,6 +54,10 @@ def method(**decorator_kwargs):
             """
             assert not args
             assert not kwargs
+            port = request.META.get('HTTP_X_FORWARDED_PORT')
+            if port and not get_is_port_allowed(port):
+                raise PermissionDenied('You are not allowed to call this TELECAST method.')
+
             if hasattr(request, 'data'):
                 arguments = request.data
             else:

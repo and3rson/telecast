@@ -10,7 +10,6 @@ def api_call(url, **kwargs):
     request = Request(url, dumps(kwargs).encode(), headers={
         'Content-Type': 'application/json'
     })
-    print(url, kwargs)
     try:
         response = urlopen(request)
     except HTTPError as error:

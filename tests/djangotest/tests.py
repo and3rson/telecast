@@ -1,5 +1,6 @@
 from json import dumps, loads
 import os
+from urllib.parse import urlparse
 
 import django
 
@@ -59,7 +60,7 @@ class Test(LiveServerTestCase):
 
     def test_rpc_call(self):
         try:
-            settings.RPC_URL = self.live_server_url
+            settings.TELECAST_URL = self.live_server_url
             result = call('/add', a=1, b=2)
             self.assertEqual(result, 3)
             result = call('/add', a=[1], b=['2'])
@@ -70,26 +71,54 @@ class Test(LiveServerTestCase):
             result = call('/hello', name='Dolly')
             self.assertEqual(result, 'Hello, Dolly!')
         finally:
-            del settings.RPC_URL
+            del settings.TELECAST_URL
 
     def test_internal_error(self):
         try:
-            settings.RPC_URL = self.live_server_url
+            settings.TELECAST_URL = self.live_server_url
             self.assertRaises(RPCError, lambda: call('/add', a=1, b='2'))
         finally:
-            del settings.RPC_URL
+            del settings.TELECAST_URL
 
     def test_bad_response(self):
         try:
-            settings.RPC_URL = self.live_server_url
+            settings.TELECAST_URL = self.live_server_url
             self.assertRaises(RPCError, lambda: call('/just-a-view'))
         finally:
-            del settings.RPC_URL
+            del settings.TELECAST_URL
 
     def test_misconfiguration(self):
         self.assertRaises(AssertionError, lambda: call('/add', a=[1], b=['2']))
         try:
-            settings.RPC_URL = 'http://666.666.666.666/'
+            settings.TELECAST_URL = 'http://666.666.666.666/'
             self.assertRaises(RPCError, lambda: call('/add', a=[1], b=['2']))
         finally:
-            del settings.RPC_URL
+            del settings.TELECAST_URL
+
+    def test_allowed_ports(self):
+        try:
+            settings.TELECAST_URL = self.live_server_url
+
+            settings.TELECAST_PORTS = ['4242']
+            # Emulate calls from reverse proxy
+            response = self.client.get('/foo', **{
+                'HTTP_X_FORWARDED_PORT': '4242'
+            })
+            self.assertEqual(response.status_code, 200)
+            response = self.client.get('/foo', **{
+                'HTTP_X_FORWARDED_PORT': '4243'
+            })
+            self.assertEqual(response.status_code, 403)
+
+            del settings.TELECAST_PORTS
+            response = self.client.get('/foo', **{
+                'HTTP_X_FORWARDED_PORT': '4243'
+            })
+            self.assertEqual(response.status_code, 200)
+
+        finally:
+            del settings.TELECAST_URL
+            try:
+                del settings.TELECAST_PORTS
+            except:
+                pass
