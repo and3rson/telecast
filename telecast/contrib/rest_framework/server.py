@@ -3,10 +3,11 @@ import inspect
 import coreapi
 import coreschema
 from django.conf import settings
-from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.decorators import api_view, schema
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
+
+from telecast import codes
 
 IGNORED_FIELDS = ['request']
 
@@ -56,7 +57,10 @@ def method(**decorator_kwargs):
             assert not kwargs
             port = request.META.get('HTTP_X_FORWARDED_PORT')
             if port and not get_is_port_allowed(port):
-                raise PermissionDenied('You are not allowed to call this TELECAST method.')
+                return Response(dict(
+                    code=codes.RPC_CODE_NOT_ALLOWED,
+                    result='You are not allowed to call this TELECAST method.'
+                ))
 
             if hasattr(request, 'data'):
                 arguments = request.data
@@ -67,13 +71,13 @@ def method(**decorator_kwargs):
             try:
                 result = func(request, **arguments)
             except Exception as error:
-                result = error
-
-            if isinstance(result, Exception):
-                raise APIException(dict(
-                    detail=str(result)
+                return Response(dict(
+                    code=codes.RPC_CODE_REMOTE_ERROR,
+                    result=str(error)
                 ))
+
             return Response(dict(
+                code=codes.RPC_CODE_OK,
                 result=result
             ))
         return wrapper

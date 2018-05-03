@@ -3,7 +3,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 
-from telecast.exceptions import RPCError
+from telecast import exceptions, codes
 
 
 def api_call(url, **kwargs):
@@ -12,20 +12,29 @@ def api_call(url, **kwargs):
     })
     try:
         response = urlopen(request)
+        data = response.read()
+        status = response.status
     except HTTPError as error:
         data = error.read()
-        try:
-            error = loads(data)['detail']
-        except:
-            error = str(data)
-        raise RPCError(error)
+        status = error.code
     except URLError as error:
-        raise RPCError(str(error))
+        raise exceptions.RPCProtocolError(str(error))
+
+    if status != 200:
+        raise exceptions.RPCProtocolError('HTTP ' + str(status) + ': ' + str(data))
+
+    try:
+        data = loads(data)
+        result = data['result']
+        code = data['code']
+    except Exception as error:
+        raise exceptions.RPCProtocolError(str(error))
     else:
-        data = response.read()
-        try:
-            result = loads(data)['result']
-        except:
-            raise RPCError(str(data))
-        else:
-            return result
+        if code == codes.RPC_CODE_PROTOCOL_ERROR:
+            # Not used at the moment.
+            raise exceptions.RPCProtocolError(str(result))
+        if code == codes.RPC_CODE_NOT_ALLOWED:
+            raise exceptions.RPCNotAllowedError(str(result))
+        if code == codes.RPC_CODE_REMOTE_ERROR:
+            raise exceptions.RPCRemoteError(str(result))
+        return result
