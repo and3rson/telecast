@@ -12,6 +12,7 @@ from django.test import LiveServerTestCase, Client
 from django.conf import settings
 
 from telecast.contrib.django.client import call
+from telecast.test import patch_rpc
 from telecast import exceptions
 
 
@@ -131,3 +132,25 @@ class Test(LiveServerTestCase):
                 del settings.TELECAST_PORTS
             except:
                 pass
+
+    @patch_rpc({
+        'new/mul': lambda a, b: a * b,
+        'new/the-answer': 42,
+        'new/error': lambda: 1 / 0
+    })
+    def test_mock_usage(self):
+        try:
+            settings.TELECAST_URL = 'foo://bar'  # required to properly parse URL.
+            self.assertEqual(call('new/mul', a=3, b=4), 12)
+            self.assertEqual(call('new/the-answer'), 42)
+            self.assertRaises(exceptions.RPCRemoteError, lambda: call('new/error'))
+        finally:
+            del settings.TELECAST_URL
+
+    @patch_rpc({'/unused': None})
+    def test_mock_misusage(self):
+        try:
+            settings.TELECAST_URL = 'foo://bar'  # required to properly parse URL.
+            self.assertRaises(AssertionError, lambda: call('/add', a=3, b=4))
+        finally:
+            del settings.TELECAST_URL

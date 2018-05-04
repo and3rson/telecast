@@ -7,6 +7,13 @@ from telecast import exceptions, codes
 
 
 def api_call(url, **kwargs):
+    # This is a proxy method to make mocking easier.
+    # The reason for this is that api_call can be imported anywhere
+    # while _api_call will always be used only from within this module.
+    return _api_call(url, **kwargs)
+
+
+def _api_call(url, **kwargs):
     request = Request(url, dumps(kwargs).encode(), headers={
         'Content-Type': 'application/json'
     })

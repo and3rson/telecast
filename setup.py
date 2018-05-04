@@ -12,7 +12,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='telecast',
-    version='0.3',
+    version='0.4',
     # use_scm_version=True,
     # setup_requires=['setuptools_scm'],
     description='Portable REST/JSON RPC implementation.',
@@ -21,7 +21,7 @@ setup(
     author='Andrew Dunai',
     author_email='a@dun.ai',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.6',
     ],
