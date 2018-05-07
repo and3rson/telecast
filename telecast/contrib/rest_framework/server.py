@@ -1,3 +1,4 @@
+from functools import wraps
 import inspect
 
 import coreapi
@@ -49,6 +50,7 @@ def method(**decorator_kwargs):
             in inspect.signature(func).parameters
             if field not in IGNORED_FIELDS
         ]))
+        @wraps(func)
         def wrapper(request, *args, **kwargs):
             """
             Proxy that wraps a function into a REST endpoint.
