@@ -11,7 +11,7 @@ django.setup()
 from django.test import LiveServerTestCase, Client
 from django.conf import settings
 
-from telecast.contrib.django.client import call
+from telecast.contrib.django.client import call, call_async
 from telecast.test import patch_rpc
 from telecast import exceptions
 
@@ -73,6 +73,17 @@ class Test(LiveServerTestCase):
             self.assertEqual(result, 'Hello, stranger!')
             result = call('/hello', name='Dolly')
             self.assertEqual(result, 'Hello, Dolly!')
+        finally:
+            del settings.TELECAST_URL
+
+    def test_call_async(self):
+        try:
+            settings.TELECAST_URL = self.live_server_url
+            future = call_async('/add', a=1, b=2)
+            self.assertEqual(future.result(), 3)
+
+            future = call_async('/add', a=1, b='2')
+            self.assertRaises(exceptions.RPCRemoteError, lambda: future.result())
         finally:
             del settings.TELECAST_URL
 
