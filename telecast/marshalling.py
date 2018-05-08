@@ -29,11 +29,11 @@ class TypedJSONTranscoder(object):
     def _encode_object(self, v):
         print('Encode', v)
         if isinstance(v, datetime):
-            return dict(__object_type='datetime', __object_value=v.isoformat())
+            return dict(__type='datetime', __value=v.isoformat())
         elif isinstance(v, UUID):
-            return dict(__object_type='uuid', __object_value=v.hex)
+            return dict(__type='uuid', __value=v.hex)
         elif isinstance(v, binary_type):
-            return dict(__object_type='binary', __object_value=list(v))
+            return dict(__type='binary', __value=list(v))
         else:
             raise exceptions.MarshallException('Don\'t know how to serialize {}'.format(repr(v)))
 
