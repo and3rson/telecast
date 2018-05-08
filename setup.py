@@ -12,7 +12,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='telecast',
-    version='0.5.1',
+    version='0.5.2',
     # use_scm_version=True,
     # setup_requires=['setuptools_scm'],
     install_requires=['python-dateutil'],
