@@ -24,7 +24,7 @@ class Test(LiveServerTestCase):
         response = self.client.get('/add')
         self.assertEqual(response.status_code, 405)
 
-    def test_bad_payload_drf_400_error(self):
+    def test_bad_payload_400_error(self):
         response = self.client.post(
             '/add',
             'can i haz jsonz',
@@ -32,13 +32,12 @@ class Test(LiveServerTestCase):
         )
         self.assertEqual(response.status_code, 400)
         data = loads(response.content)
-        self.assertIn('detail', data)
-        self.assertIn('JSON parse error', data['detail'])
+        self.assertIn('result', data)
+        self.assertIn('Bad payload.', data['result'])
 
     def test_raw_call(self):
         response = self.client.post('/add')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(loads(response.content)['code'], 150)
+        self.assertEqual(response.status_code, 415)
 
         response = self.client.post(
             '/add',

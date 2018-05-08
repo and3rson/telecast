@@ -4,13 +4,26 @@ import inspect
 import coreapi
 import coreschema
 from django.conf import settings
-from rest_framework.decorators import api_view, schema
+from rest_framework.decorators import api_view, schema, parser_classes
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
+from rest_framework.parsers import BaseParser
+from rest_framework.exceptions import ValidationError
 
 from telecast import codes
+from telecast.marshalling import transcoder
 
 IGNORED_FIELDS = ['request']
+
+
+class TypedJSONParser(BaseParser):
+    media_type = 'application/json'
+
+    def parse(self, stream, media_type=None, parser_context=None):
+        try:
+            return transcoder.decode(stream.read())
+        except:
+            raise ValidationError(dict(result='Bad payload.'))
 
 
 def get_is_port_allowed(port):
@@ -39,6 +52,7 @@ def method(**decorator_kwargs):
             decorator_kwargs['http_method_names'] = ['POST']
 
         @api_view(**decorator_kwargs)
+        @parser_classes((TypedJSONParser,))
         @schema(AutoSchema(manual_fields=[
             coreapi.Field(
                 field,

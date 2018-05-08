@@ -4,6 +4,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 
 from telecast import exceptions, codes
+from telecast.marshalling import transcoder
 
 
 def api_call(url, **kwargs):
@@ -14,7 +15,7 @@ def api_call(url, **kwargs):
 
 
 def _api_call(url, **kwargs):
-    request = Request(url, dumps(kwargs).encode(), headers={
+    request = Request(url, transcoder.encode(kwargs).encode(), headers={
         'Content-Type': 'application/json'
     })
     try:

@@ -30,3 +30,10 @@ class RPCProtocolError(RPCError):
     a valid RPC endpoint or that the callee network was down.
     """
     pass
+
+
+class MarshallException(RPCError):
+    """
+    Raised when encoding of a payload failed.
+    """
+    pass
